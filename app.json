@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CuttingOptimizer",
-    "slug": "CuttingOptimizer",
+    "slug": "cutting-optimizer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,6 +23,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7335e93d-a0d6-44d1-8af0-10e33d369a32"
+      }
+    },
+    "owner": "freeheart110",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7335e93d-a0d6-44d1-8af0-10e33d369a32"
     }
   }
 }
