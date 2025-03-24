@@ -1,65 +1,108 @@
+// This function calculates the optimal cutting plan by running two algorithms (FFD and BFD)
+// and then dynamically comparing their results using a weighted scoring system.
 export const calculateOptimalCuttingPlan = (stockLengths, desiredCuttings) => {
-  // Run both algorithms.
+  // Run the First-Fit Decreasing (FFD) algorithm.
   const resultFfd = calculateFfd(stockLengths, desiredCuttings);
+  // Run the Best-Fit Decreasing (BFD) algorithm.
   const resultBfd = calculateBfd(stockLengths, desiredCuttings);
 
-  // Compare usage rates (higher usage rate means better utilization of stock)
-  return resultFfd.usageRate >= resultBfd.usageRate ? resultFfd : resultBfd;
+  // Define weights for each metric.
+  // Higher weight indicates greater importance.
+  const weightUnplaced = 0.5; // Fewer unplaced cuttings (count) is preferred.
+  const weightUsage = 0.3;    // Higher usage rate (cutting length / stock length) is preferred.
+  const weightStocks = 0.2;   // Fewer stocks used (i.e. fewer entries in cuttingPlans) is preferred.
+
+  // Helper function to compute the total length of cuttings from a given cuttingPlans array.
+  const getTotalCuttingsLength = (plans) =>
+    plans.reduce((sum, plan) => sum + plan.cutting.reduce((s, c) => s + c, 0), 0);
+
+  // Calculate a weighted score for a result.
+  // The score is higher when:
+  // 1. There are fewer unplaced cuttings,
+  // 2. The usage rate is higher, and
+  // 3. Fewer stocks are used.
+  const calculateScore = (result) => {
+    // Inverse of unplaced count: using 1/(1 + count) ensures that as the number of
+    // unplaced cuttings increases, the score decreases.
+    const unplacedScore = weightUnplaced * (1 / (1 + result.unplacedCuttings.length));
+    // Directly use the usage rate with its weight.
+    const usageScore = weightUsage * result.usageRate;
+    // Penalty based on the number of stocks used (lower is better).
+    const stocksPenalty = weightStocks * result.cuttingPlans.length;
+    // Total score is the sum of positive scores minus the penalty.
+    return unplacedScore + usageScore - stocksPenalty;
+  };
+
+  // Compute scores for both algorithm results.
+  const scoreFfd = calculateScore(resultFfd);
+  const scoreBfd = calculateScore(resultBfd);
+
+  // Choose the result with the higher overall score.
+  return scoreFfd >= scoreBfd ? resultFfd : resultBfd;
 };
 
+// -----------------------------------------------------------------------
 // First-Fit Decreasing (FFD) Algorithm
+// This algorithm assigns each cutting to the first stock that can accommodate it.
 function calculateFfd(stockLengths, desiredCuttings) {
-  // Sort stock lengths and desired cuttings in descending order.
+  // Sort stock lengths in descending order.
   const sortedStocks = [...stockLengths].sort((a, b) => b - a);
+  // Sort desired cuttings in descending order.
   const sortedCuttings = [...desiredCuttings].sort((a, b) => b - a);
 
-  // Initialize stocks with an object for each stock.
+  // Create an array of stock objects.
+  // Each stock has:
+  // - original: the original length,
+  // - remaining: initially equal to the original length, and
+  // - cuttings: an empty array to store the cuttings assigned to it.
   const stocks = sortedStocks.map(length => ({
     original: length,
     remaining: length,
     cuttings: []
   }));
 
-  // Array to hold cuttings that cannot be placed.
+  // Initialize an array to store cuttings that cannot be placed in any stock.
   const unplacedCuttings = [];
 
-  // For each cutting, assign it to the first stock that can accommodate it.
+  // For each cutting in the sorted list, try to place it in the first stock that has enough remaining length.
   for (const cutting of sortedCuttings) {
     let placed = false;
     for (const stock of stocks) {
       if (stock.remaining >= cutting) {
-        stock.cuttings.push(cutting);
-        stock.remaining -= cutting;
+        stock.cuttings.push(cutting); // Assign the cutting.
+        stock.remaining -= cutting;   // Reduce the remaining length.
         placed = true;
-        break; // Move to the next cutting.
+        break; // Move on to the next cutting once it is placed.
       }
     }
+    // If no stock could accommodate the cutting, add it to unplacedCuttings.
     if (!placed) {
       unplacedCuttings.push(cutting);
     }
   }
 
-  // Generate cutting plans for stocks that were used.
+  // Build the cutting plans by filtering stocks that have been used.
   const cuttingPlans = stocks
     .filter(stock => stock.cuttings.length > 0)
     .map(stock => ({
-      stock: stock.original,
-      cutting: stock.cuttings,
-      remaining: stock.remaining
+      stock: stock.original,   // Original stock length.
+      cutting: stock.cuttings, // List of assigned cuttings.
+      remaining: stock.remaining // Leftover length.
     }));
 
-  // Identify unused stocks.
+  // Identify stocks that were not used at all.
   const unplacedStocks = stocks
     .filter(stock => stock.cuttings.length === 0)
     .map(stock => stock.original);
 
-  // Calculate total length of stocks used.
+  // Calculate the total length of stocks used in the cutting plans.
   const totalUsedStockLength = cuttingPlans.reduce((sum, plan) => sum + plan.stock, 0);
-  // Calculate total length of placed cuttings.
-  const totalCuttingsLength = cuttingPlans.reduce((sum, plan) =>
-    sum + plan.cutting.reduce((s, c) => s + c, 0), 0);
-
-  // Usage rate: total cuttings length divided by total used stock length.
+  // Calculate the total length of all cuttings placed.
+  const totalCuttingsLength = cuttingPlans.reduce(
+    (sum, plan) => sum + plan.cutting.reduce((s, c) => s + c, 0),
+    0
+  );
+  // Compute the usage rate.
   const usageRate = totalUsedStockLength > 0 ? totalCuttingsLength / totalUsedStockLength : 0;
 
   return {
@@ -70,40 +113,43 @@ function calculateFfd(stockLengths, desiredCuttings) {
   };
 }
 
+// -----------------------------------------------------------------------
 // Best-Fit Decreasing (BFD) Algorithm
+// This algorithm assigns each cutting to the stock that, after placement, would leave the smallest remaining space.
 function calculateBfd(stockLengths, desiredCuttings) {
   // Sort stock lengths and desired cuttings in descending order.
   const sortedStocks = [...stockLengths].sort((a, b) => b - a);
   const sortedCuttings = [...desiredCuttings].sort((a, b) => b - a);
 
-  // Initialize stocks with an object for each stock.
+  // Create stock objects.
   const stocks = sortedStocks.map(length => ({
     original: length,
     remaining: length,
     cuttings: []
   }));
 
-  // Array to hold cuttings that cannot be placed.
+  // Initialize array for cuttings that cannot be placed.
   const unplacedCuttings = [];
 
-  // For each cutting, assign it to the stock that leaves the least remaining space.
+  // For each cutting, find all stocks that can accommodate it.
+  // Then choose the stock that minimizes the leftover space after placement.
   for (const cutting of sortedCuttings) {
-    // Find all stocks that can accommodate the cutting.
     const candidates = stocks.filter(stock => stock.remaining >= cutting);
-    
     if (candidates.length > 0) {
-      // Use reduce to pick the candidate with the smallest leftover space after placement.
+      // Use reduce to select the best candidate.
+      // For each candidate, compute (remaining - cutting) and select the smallest value.
       const bestStock = candidates.reduce((best, current) =>
         (current.remaining - cutting < best.remaining - cutting) ? current : best
       );
-      bestStock.cuttings.push(cutting);
-      bestStock.remaining -= cutting;
+      bestStock.cuttings.push(cutting);   // Assign the cutting.
+      bestStock.remaining -= cutting;       // Update remaining length.
     } else {
+      // If no candidate can accommodate the cutting, add it to unplacedCuttings.
       unplacedCuttings.push(cutting);
     }
   }
 
-  // Generate cutting plans for stocks that were used.
+  // Build the cutting plans.
   const cuttingPlans = stocks
     .filter(stock => stock.cuttings.length > 0)
     .map(stock => ({
@@ -112,18 +158,17 @@ function calculateBfd(stockLengths, desiredCuttings) {
       remaining: stock.remaining
     }));
 
-  // Identify unused stocks.
+  // Identify stocks that were not used.
   const unplacedStocks = stocks
     .filter(stock => stock.cuttings.length === 0)
     .map(stock => stock.original);
 
-  // Calculate total length of stocks used.
+  // Calculate total used stock length and total cutting length.
   const totalUsedStockLength = cuttingPlans.reduce((sum, plan) => sum + plan.stock, 0);
-  // Calculate total length of placed cuttings.
-  const totalCuttingsLength = cuttingPlans.reduce((sum, plan) =>
-    sum + plan.cutting.reduce((s, c) => s + c, 0), 0);
-
-  // Usage rate: total cuttings length divided by total used stock length.
+  const totalCuttingsLength = cuttingPlans.reduce(
+    (sum, plan) => sum + plan.cutting.reduce((s, c) => s + c, 0),
+    0
+  );
   const usageRate = totalUsedStockLength > 0 ? totalCuttingsLength / totalUsedStockLength : 0;
 
   return {

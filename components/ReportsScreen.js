@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   reportSection: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   sectionHeader: {
     fontSize: 20,
