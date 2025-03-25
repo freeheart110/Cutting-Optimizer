@@ -26,9 +26,9 @@ const OptimizerScreen = ({ navigation }) => {
   // Calculate the optimal cutting plan and navigate to the Reports screen.
   const calculateOptimalPlan = () => {
     try {
-      // For unlimited stock, use a very large quantity (e.g. 99, ).
+      // For unlimited stock, use a very large quantity (100).
       const stockArray = stockLengths.flatMap(stock => {
-        const qty = unlimitedStock ? 20 : stock.quantity;
+        const qty = unlimitedStock ? 100 : stock.quantity;
         return Array(qty).fill(parseFloat(stock.length) || 0);
       });
       // Convert desired cuttings/quantities into an array for the optimizer.
@@ -149,9 +149,8 @@ const OptimizerScreen = ({ navigation }) => {
             onChangeText={(text) => updateStockLength(stock.id, 'quantity', text)}
             placeholder="Qty"
             placeholderTextColor="#888"
-            editable={!unlimitedStock} // Disable input when unlimited stock mode is on
+            editable={!unlimitedStock} // Disable input when unlimited mode is on
           />
-          {/* Delete icon for stock row */}
           <Pressable style={styles.iconButton} onPress={() => removeStockRow(stock.id)}>
             <Ionicons name="trash" size={24} color="#d11a2a" />
           </Pressable>
@@ -181,7 +180,6 @@ const OptimizerScreen = ({ navigation }) => {
             placeholder="Qty"
             placeholderTextColor="#888"
           />
-          {/* Delete icon for desired cutting row */}
           <Pressable style={styles.iconButton} onPress={() => removeDesiredCuttingRow(cutting.id)}>
             <Ionicons name="trash" size={24} color="#d11a2a" />
           </Pressable>
@@ -205,119 +203,117 @@ const styles = StyleSheet.create({
     backgroundColor: "#f4f6fa",
   },
   contentContainer: {
-    padding: 20,
+    padding: 10, // Reduced overall padding for a compact view.
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: "#ffffff",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  headerLabel: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  unlimitedButton: {
-    backgroundColor: "#ddd",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    padding: 8, // Smaller padding.
     borderRadius: 6,
-    alignSelf: 'center',
-  },
-  clearAllButton: {
-    backgroundColor: "#d11a2a",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  clearAllButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  unlimitedButtonActive: {
-    backgroundColor: "#4CAF50",
-  },
-  unlimitedButtonText: {
-    color: "#333",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  sectionLabel: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 10,
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    backgroundColor: "#ffffff",
-    padding: 10,
-    borderRadius: 8,
+    marginBottom: 10, // Reduced margin.
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
   },
+  unlimitedButton: {
+    backgroundColor: "#ddd",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+  },
+  unlimitedButtonActive: {
+    backgroundColor: "#4CAF50",
+  },
+  unlimitedButtonText: {
+    color: "#333",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  clearAllButton: {
+    backgroundColor: "#d11a2a",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+  },
+  clearAllButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  sectionLabel: {
+    fontSize: 18, // Slightly smaller font.
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 6, // Reduced margin.
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10, // Reduced margin.
+    backgroundColor: "#ffffff",
+    padding: 8, // Reduced padding.
+    borderRadius: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   input: {
     flex: 3,
-    height: 45,
+    height: 40,
     borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderRadius: 4,
+    paddingHorizontal: 8, // Smaller padding.
     backgroundColor: "#f9f9f9",
+    fontSize: 14, // Slightly smaller font.
+    color: "#333",
   },
   inputSmall: {
     flex: 1,
-    height: 45,
+    height: 40,
     borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderRadius: 4,
+    paddingHorizontal: 8,
     backgroundColor: "#f9f9f9",
-    marginLeft: 10,
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#333",
   },
   iconButton: {
-    marginLeft: 10,
-    padding: 8,
+    marginLeft: 8,
+    padding: 6,
   },
   addButton: {
     backgroundColor: "#4CAF50",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   addButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   calculateButton: {
     backgroundColor: "#2196F3",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 4,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
   },
   calculateButtonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
