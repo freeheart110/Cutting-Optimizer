@@ -51,23 +51,21 @@ const formatCuttingPlans = (plans = []) =>
 
 /*
   Group reports by project name.
-  Each section contains:
-    - title: the raw project name.
-    - headerTitle: the project name combined with the earliest created date.
-    - data: the array of reports in that group.
+  Returns an array where each section includes:
+    - project: the project name.
+    - createdAt: the earliest creation date.
+    - data: the reports for that project.
 */
 const groupReportsByProject = (reportsArray) => {
   const groups = {};
   reportsArray.forEach((report) => {
-    // If projectName is missing, default to "Unspecified Project"
     const project = report.projectName || "Unspecified Project";
-    // Convert createdAt to a JS Date (if it's a Firestore Timestamp)
     const createdAt =
       report.createdAt && typeof report.createdAt.toDate === "function"
         ? report.createdAt.toDate()
         : new Date(report.createdAt);
     if (!groups[project]) {
-      groups[project] = { title: project, createdAt, data: [] };
+      groups[project] = { project, createdAt, data: [] };
     } else {
       // Keep the earliest createdAt
       if (createdAt < groups[project].createdAt) {
@@ -76,14 +74,10 @@ const groupReportsByProject = (reportsArray) => {
     }
     groups[project].data.push(report);
   });
-  const sectionArray = Object.keys(groups).map((project) => {
-    const createdAt = groups[project].createdAt;
-    const headerTitle = `${project} (Created: ${createdAt.toLocaleDateString()})`;
-    return { title: project, headerTitle, data: groups[project].data };
-  });
-  // Sort sections by the creation date of the first report (oldest first)
+  const sectionArray = Object.keys(groups).map((project) => groups[project]);
+  // Sort sections by the creation date (oldest first)
   sectionArray.sort(
-    (a, b) => new Date(a.data[0].createdAt) - new Date(b.data[0].createdAt)
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   );
   return sectionArray;
 };
@@ -133,7 +127,7 @@ const ReportItem = ({
       containerStyle={styles.swipeableContainer}
     >
       <Pressable onPress={toggleExpanded} style={styles.reportItem}>
-        {/* Header row: show Material Type and Project Name */}
+        {/* Header row: show Material Type and report date */}
         <View style={styles.rowBetween}>
           <View>
             <Text style={styles.reportName}>
@@ -256,7 +250,7 @@ export default function HistoryScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Absolute positioned animated header */}
+      {/* Absolute positioned animated header with refresh button */}
       <Animated.View
         style={[
           styles.headerContainer,
@@ -278,7 +272,7 @@ export default function HistoryScreen({ navigation }) {
         </Pressable>
       </Animated.View>
 
-      {/* If not logged in, show login prompt */}
+      {/* Show login prompt if not authenticated */}
       {!auth.currentUser ? (
         <View style={styles.loginPrompt}>
           <Text style={styles.error}>
@@ -292,15 +286,15 @@ export default function HistoryScreen({ navigation }) {
         <Text>Loading...</Text>
       ) : sections.length > 0 ? (
         <Animated.SectionList
-          sections={sections.map((sec) => ({
-            title: sec.headerTitle,
-            data: sec.data,
-          }))}
+          sections={sections}
           keyExtractor={(item) => item.id}
           renderItem={renderReport}
-          renderSectionHeader={({ section: { title } }) => (
+          renderSectionHeader={({ section: { project, createdAt } }) => (
             <View style={styles.sectionHeaderContainer}>
-              <Text style={styles.sectionHeader}>{title}</Text>
+              <Text style={styles.sectionHeaderLeft}>{project}</Text>
+              <Text style={styles.sectionHeaderRight}>
+                Created: {createdAt.toLocaleDateString()}
+              </Text>
             </View>
           )}
           refreshControl={
@@ -343,12 +337,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc",
     padding: 0,
   },
-  header: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-  },
   instruction: {
     fontSize: 14,
     color: "gray",
@@ -370,15 +358,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sectionHeaderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#f0f0f0",
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 6,
     marginBottom: 1,
   },
-  sectionHeader: {
+  sectionHeaderLeft: {
     fontSize: 22,
     fontWeight: "bold",
+    color: "#333",
+  },
+  sectionHeaderRight: {
+    fontSize: 14,
     color: "#333",
   },
   swipeableContainer: {
@@ -401,10 +396,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 2,
     color: "#333",
-  },
-  reportSubTitle: {
-    fontSize: 16,
-    color: "#555",
   },
   reportText: {
     fontSize: 16,
