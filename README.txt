@@ -53,15 +53,9 @@ Prerequisites:
 3. Start Expo:
   npx expo start
 4. Run the app:
-
-	•	On Mobile:
-
-    •	Install the Expo Go app from Google Play or App Store.
-
-    •	Scan the QR code displayed in your terminal or browser.
-
-	•	On PC :
-  
-	  › Press a │ open Android
-
-    › Press i │ open iOS simulator
+	-	On Mobile:
+    -	Install the Expo Go app from Google Play or App Store.
+    -	Scan the QR code displayed in your terminal or browser.
+	-	On PC :
+	  - Press a │ open Android
+    - Press i │ open iOS simulator
