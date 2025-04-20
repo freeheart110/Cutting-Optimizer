@@ -6,9 +6,10 @@
 
 ## 🚀 Features
 
-- 🔧 **Linear Cutting Optimization** using both:
+- 🔧 **Linear Cutting Optimization** using and comparing:
   - **FFD (First-Fit Decreasing)** and
   - **BFD (Best-Fit Decreasing)** algorithms.
+  - **Custom Genetic Algorithm** designed to evolve efficient cutting plans over multiple generations
 - 📊 **Dynamic Scoring** that selects the best result based on:
   - Fewer unplaced cuttings
   - Higher material usage rate
