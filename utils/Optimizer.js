@@ -1,10 +1,17 @@
-// This function calculates the optimal cutting plan by running two algorithms (FFD and BFD)
-// and then dynamically comparing their results using a weighted scoring system.
+// This function calculates the optimal cutting plan by running three algorithms:
+// First-Fit Decreasing (FFD), Best-Fit Decreasing (BFD), and a Genetic Optimizer.
+// It dynamically compares their results using a weighted scoring system and selects the best.
+
+import { runGeneticCuttingOptimizer } from './GeneticOptimizer';
+
 export const calculateOptimalCuttingPlan = (stockLengths, desiredCuttings) => {
   // Run the First-Fit Decreasing (FFD) algorithm.
   const resultFfd = calculateFfd(stockLengths, desiredCuttings);
   // Run the Best-Fit Decreasing (BFD) algorithm.
   const resultBfd = calculateBfd(stockLengths, desiredCuttings);
+
+  // Run the Genetic Optimization algorithm.
+  const resultGenetic = runGeneticCuttingOptimizer(stockLengths, desiredCuttings);
 
   // Define weights for each metric.
   // Higher weight indicates greater importance.
@@ -33,12 +40,34 @@ export const calculateOptimalCuttingPlan = (stockLengths, desiredCuttings) => {
     return unplacedScore + usageScore - stocksPenalty;
   };
 
-  // Compute scores for both algorithm results.
+  // Compute scores for the three algorithm results.
   const scoreFfd = calculateScore(resultFfd);
   const scoreBfd = calculateScore(resultBfd);
+  const scoreGenetic = calculateScore(resultGenetic);
 
-  // Choose the result with the higher overall score.
-  return scoreFfd >= scoreBfd ? resultFfd : resultBfd;
+    // Determine the highest score
+  const maxScore = Math.max(scoreFfd, scoreBfd, scoreGenetic);
+
+  // Determine all winners
+  const winners = [];
+  if (scoreFfd === maxScore) winners.push('FFD');
+  if (scoreBfd === maxScore) winners.push('BFD');
+  if (scoreGenetic === maxScore) winners.push('Genetic');
+
+  // Decide which result to return (priority: Genetic > BFD > FFD if tied)
+  let bestResult;
+  if (winners.includes('Genetic')) {
+    bestResult = resultGenetic;
+  } else if (winners.includes('BFD')) {
+    bestResult = resultBfd;
+  } else {
+    bestResult = resultFfd;
+  }
+
+  // Log the results
+  console.log(`Best algorithm${winners.length > 1 ? 's' : ''}: ${winners.join(', ')}`);
+  console.log(`Scores — FFD: ${scoreFfd.toFixed(4)}, BFD: ${scoreBfd.toFixed(4)}, Genetic: ${scoreGenetic.toFixed(4)}`);
+  return bestResult;
 };
 
 // -----------------------------------------------------------------------

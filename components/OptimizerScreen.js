@@ -9,6 +9,8 @@ import {
   Pressable 
 } from 'react-native';
 import { calculateOptimalCuttingPlan } from '../utils/Optimizer';
+import { runGeneticCuttingOptimizer } from '../utils/GeneticOptimizer';
+
 import { Ionicons } from '@expo/vector-icons';
 
 const OptimizerScreen = ({ navigation }) => {
